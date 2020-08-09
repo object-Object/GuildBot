@@ -44,7 +44,7 @@ class GuildBotHelp(commands.HelpCommand):
 	async def send_group_help(self, group):
 		embed = discord.Embed(
 			title=group.name,
-			description=f"`{self.get_command_signature(group)}` - {group.help}",
+			description="`{}`{}{}".format(self.get_command_signature(group), ' - '+group.brief if group.brief is not None else '', '\n\n'+group.help if group.help is not None else ''),
 			color=discord.Color(0x007fff)
 		)
 
@@ -56,7 +56,7 @@ class GuildBotHelp(commands.HelpCommand):
 	async def send_command_help(self, command):
 		await self.get_destination().send(embed=discord.Embed(
 			title=command.name,
-			description=f"`{self.get_command_signature(command)}` - {command.help}",
+			description="`{}`{}{}".format(self.get_command_signature(command), ' - '+command.brief if command.brief is not None else '', '\n\n'+command.help if command.help is not None else ''),
 			color=discord.Color(0x007fff)
 		))
 
