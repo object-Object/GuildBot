@@ -1,8 +1,9 @@
 import config
 
 from bot import Bot
+from help import GuildBotHelp
 
-bot = Bot(command_prefix=config.prefix)
+bot = Bot(command_prefix=config.prefix, help_command=GuildBotHelp())
 
 @bot.event
 async def on_ready():
