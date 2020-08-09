@@ -8,11 +8,21 @@ class GuildBotHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title="Help", description="Listing all top-level commands and groups. Specify a command to see more information.", colour=discord.Colour.blue())
 
+        fields = []
         for cog in mapping.keys():
             if cog:
-                embed.add_field(name=cog.qualified_name, value="`" + "`, `".join([command.name for command in mapping[cog]]) + "`")
+                if len(mapping[cog])>0:
+                    name = cog.qualified_name
+                else:
+                	name = None
             else:
-                embed.description += "\n\n`" + "`, `".join([command.name for command in mapping[cog]]) + "`"
+                name = "Uncategorized"
+            if name is not None:
+            	fields.append((name, f"`{'`, `'.join([command.name for command in mapping[cog]])}`" ))
+        fields.sort()
+        for field in fields:
+            embed.add_field(name=field[0], value=field[1])
+
         await self.get_destination().send(embed=embed)
     
     async def send_cog_help(self, cog):
