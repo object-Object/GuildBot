@@ -6,7 +6,7 @@ class Owner(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	@commands.group(invoke_without_command=True, aliases=["ext"])
+	@commands.group(invoke_without_command=True, aliases=["ext"], help="Lists all extensions in the bot, loaded or unloaded.", brief="Lists all extensions in the bot, loaded or unloaded.")
 	@commands.is_owner()
 	async def extensions(self, ctx):
 		await ctx.send(embed=discord.Embed(
@@ -15,7 +15,7 @@ class Owner(commands.Cog):
 			color=discord.Color(0x00ff00)
 		))
 
-	@extensions.command()
+	@extensions.command(help="Loads an extension by name.", brief="Loads an extension by name.")
 	@commands.is_owner()
 	async def load(self, ctx, extension: str):
 		try:
@@ -31,7 +31,7 @@ class Owner(commands.Cog):
 				color=discord.Color(0x00ff00)
 			))
 
-	@extensions.command()
+	@extensions.command(help="Unloads an extension by name.", brief="Unloads an extension by name.")
 	@commands.is_owner()
 	async def unload(self, ctx, extension: str):
 		if extension=="owner":
@@ -54,7 +54,7 @@ class Owner(commands.Cog):
 				color=discord.Color(0x00ff00)
 			))
 
-	@extensions.command(aliases=["r"])
+	@extensions.command(aliases=["r"], help="Reloads an extension by name. Rolls back the changes if there is an error.", brief="Reloads an extension by name. Rolls back the changes if there is an error.")
 	@commands.is_owner()
 	async def reload(self, ctx, extension: str):
 		try:
