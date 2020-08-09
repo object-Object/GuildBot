@@ -11,8 +11,8 @@ class Owner(commands.Cog):
 	async def extensions(self, ctx):
 		await ctx.send(embed=discord.Embed(
 			title="List of extensions",
-			description="```\n" + "\n".join(sorted([f[:-3] for f in os.listdir("extensions") if f.endswith(".py")])) + "```",
-			color=discord.Color(0x00ff00)
+			description=f"`{'`, `'.join(sorted([f[:-3] for f in os.listdir('extensions') if f.endswith('.py')]))}`",
+			color=discord.Color(0x007fff)
 		))
 
 	@extensions.command(help="Loads an extension by name.", brief="Loads an extension by name.")
@@ -22,13 +22,14 @@ class Owner(commands.Cog):
 			self.bot.load_extension("extensions." + extension)
 		except commands.ExtensionError as e:
 			await ctx.send(embed=discord.Embed(
-				description=f"Failed to load extension `{extension}`!```\n" + str(e) + "```",
+				title="Command failed!",
+				description=f"Failed to load extension `{extension}`:```\n" + str(e) + "```",
 				color=discord.Color(0xff0000)
 			))
 		else:
 			await ctx.send(embed=discord.Embed(
 				description=f"Successfully loaded extension `{extension}`.",
-				color=discord.Color(0x00ff00)
+				color=discord.Color(0x007fff)
 			))
 
 	@extensions.command(help="Unloads an extension by name.", brief="Unloads an extension by name.")
@@ -36,7 +37,8 @@ class Owner(commands.Cog):
 	async def unload(self, ctx, extension: str):
 		if extension=="owner":
 			await ctx.send(embed=discord.Embed(
-				description=f"Extension `owner` cannot be unloaded!",
+				title="Command failed!",
+				description=f"Extension `owner` cannot be unloaded.",
 				color=discord.Color(0xff0000)
 			))
 			return
@@ -45,13 +47,14 @@ class Owner(commands.Cog):
 			self.bot.unload_extension("extensions." + extension)
 		except commands.ExtensionError as e:
 			await ctx.send(embed=discord.Embed(
-				description=f"Failed to unload extension `{extension}`!```\n" + str(e) + "```",
+				title="Command failed!",
+				description=f"Failed to unload extension `{extension}`:```\n" + str(e) + "```",
 				color=discord.Color(0xff0000)
 			))
 		else:
 			await ctx.send(embed=discord.Embed(
 				description=f"Successfully unloaded extension `{extension}`.",
-				color=discord.Color(0x00ff00)
+				color=discord.Color(0x007fff)
 			))
 
 	@extensions.command(aliases=["r"], help="Reloads an extension by name. Rolls back the changes if there is an error.", brief="Reloads an extension by name. Rolls back the changes if there is an error.")
@@ -61,13 +64,14 @@ class Owner(commands.Cog):
 			self.bot.reload_extension("extensions." + extension)
 		except commands.ExtensionError as e:
 			await ctx.send(embed=discord.Embed(
-				description=f"Failed to reload extension `{extension}`!```\n" + str(e) + "```",
+				title="Command failed!",
+				description=f"Failed to reload extension `{extension}`:```\n" + str(e) + "```",
 				color=discord.Color(0xff0000)
 			))
 		else:
 			await ctx.send(embed=discord.Embed(
 				description=f"Successfully reloaded extension `{extension}`.",
-				color=discord.Color(0x00ff00)
+				color=discord.Color(0x007fff)
 			))
 
 def setup(bot):
