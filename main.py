@@ -9,6 +9,6 @@ bot = Bot(command_prefix=config.prefix, help_command=GuildBotHelp())
 
 @bot.event
 async def on_ready():
-	print(f"Logged in as {bot.user.name}.")
+    print(f"Logged in as {bot.user.name}.")
 
 bot.run(config.token)
