@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 from bot import Bot
-from help import GuildBotHelp
+from utils.help import GuildBotHelp
 
 bot = Bot(command_prefix=config.prefix, help_command=GuildBotHelp())
 
