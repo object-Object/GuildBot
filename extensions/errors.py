@@ -51,8 +51,15 @@ class CommandErrorHandler(commands.Cog):
 				color=discord.Color(0xff0000)
 			))
 
+		elif isinstance(error, commands.MissingRequiredArgument):
+			await ctx.send(embed=discord.Embed(
+				title=embedTitle,
+				description=f"{error}\nCommand usage: `{self.bot.command_prefix}{ctx.command.qualified_name} {ctx.command.signature}`",
+				color=discord.Color(0xff0000)
+			))
+
 		else:
-			print("Ignoring exception in command {}:".format(ctx.command), file=sys.stderr)
+			print("\nIgnoring exception in command {}:".format(ctx.command), file=sys.stderr)
 			traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 def setup(bot):
