@@ -48,11 +48,13 @@ class Channels(commands.Cog):
         if len(title)>256:
             raise(commands.BadArgument("title must not be longer than 256 characters."))
 
-        channel_name = re.sub(r"\s+", "-", title.lower())
-        channel_name = re.sub(r"[^a-zA-Z0-9_\-]", "", channel_name)
-        channel_name = re.sub(r"\-+", "-", channel_name)
-        if len(channel_name)>200 or len(channel_name)<2:
-            raise commands.BadArgument("title must be 2-200 characters long after being formatted into a valid channel name.")
+        channel_name = re.sub(r"\s+", "-", title.lower())  # replace spaces with a single dash
+        channel_name = re.sub(r"[^a-zA-Z0-9_\-]", "", channel_name)  # remove any illegal characters as defined by Discord
+        channel_name = re.sub(r"\-+", "-", channel_name)  # collapse multiple dashes into a single dash
+        channel_name = re.sub(r"^\-", "", channel_name)  # remove leading dashes
+        channel_name = re.sub(r"\-$", "", channel_name)  # remove trailing dashes
+        if len(channel_name)>999 or len(channel_name)<1:
+            raise commands.BadArgument("title must be 1-999 characters long after being formatted into a valid channel name.")
 
         channel = await category.create_text_channel(channel_name, topic=f"Thread started by {ctx.author.mention}.")
         message = await channel.send(embed=discord.Embed(
