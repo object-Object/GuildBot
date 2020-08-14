@@ -2,18 +2,11 @@ import discord
 from discord.ext import commands
 import config
 import re
-from utils import errors
+from utils import errors, converters
 
 class Channels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    class CategoryConverter(commands.Converter):
-        async def convert(self, ctx, argument):
-            channel = discord.utils.find(lambda c: c.name.lower()==argument.lower(), ctx.guild.categories)
-            if not isinstance(channel, discord.CategoryChannel):
-                return await commands.CategoryChannelConverter().convert(ctx, argument)
-            return channel
 
     def channel_is_thread():
         async def predicate(ctx):
@@ -40,7 +33,7 @@ class Channels(commands.Cog):
 
     @commands.command(brief="Starts a new thread.", help="If the title or category contain spaces, it must be put into quotes. The content does **not** need to be put into quotes.")
     @commands.guild_only()
-    async def thread(self, ctx, title, category: CategoryConverter, *, content):
+    async def thread(self, ctx, title, category: converters.CategoryConverter, *, content):
         if not category.name.lower() in config.allowed_thread_categories:
             raise commands.BadArgument(f"The category's name must be one of `{'`, `'.join(config.allowed_thread_categories)}` (case-insensitive).")
         if not ctx.author.permissions_in(category).view_channel:
@@ -113,7 +106,7 @@ class Channels(commands.Cog):
     @commands.guild_only()
     @channel_is_thread()
     @author_can_archive()
-    async def necro(self, ctx, category: CategoryConverter, *, reason):
+    async def necro(self, ctx, category: converters.CategoryConverter, *, reason):
         if not category.name.lower() in config.allowed_thread_categories:
             raise commands.BadArgument(f"The category's name must be one of `{'`, `'.join(config.allowed_thread_categories)}` (case-insensitive).")
         if not ctx.author.permissions_in(category).view_channel:
