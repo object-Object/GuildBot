@@ -8,7 +8,7 @@ async def create_pool():
 
 class Database():
     def __init__(self):
-        self.pool = asyncio.get_event_loop().run_until_complete(create_pool)
+        self.pool = asyncio.get_event_loop().run_until_complete(create_pool())
     
     async def get_thread(self, channel_id):
         async with self.pool.acquire() as conn:
