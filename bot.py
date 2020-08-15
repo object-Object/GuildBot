@@ -1,14 +1,17 @@
 from discord.ext import commands
 
+import utils.database
+
 import sys
 import traceback
 import os
 import config
 
 class Bot(commands.Bot):
-    def __init__(self, conn, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.conn = conn
+
+        self.database = utils.database.Database()
 
         for extension in [f for f in os.listdir("extensions") if f.endswith(".py")]:
             try:

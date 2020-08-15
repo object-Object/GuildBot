@@ -10,10 +10,7 @@ class Channels(commands.Cog):
 
     def channel_is_thread():
         async def predicate(ctx):
-            conn = ctx.bot.conn
-            c = conn.cursor()
-            c.execute("SELECT * FROM threads WHERE channel_id = ?", (ctx.channel.id,))
-            if c.fetchone() is None:
+            if ctx.bot.database.get_thread(ctx.channel.id) is None:
                 raise errors.ThreadOnly(f"This command may only be used in a channel that was created using the `{ctx.bot.command_prefix}thread` command.")
             return True
         return commands.check(predicate)
@@ -21,12 +18,8 @@ class Channels(commands.Cog):
     def author_can_archive():
         # Only raises an error if the user isn't the thread author and doesn't have the Trustee role. If you want an error message for not being in a thread, also use channel_is_thread.
         async def predicate(ctx):
-            conn = ctx.bot.conn
-            c = conn.cursor()
-            c.execute("SELECT author_id FROM threads WHERE channel_id = ?", (ctx.channel.id,))
             role = discord.utils.find(lambda r: r.name==config.trustee_role, ctx.author.roles)
-            row = c.fetchone()
-            if row is not None and ctx.author.id!=row[0] and role is None:
+            if ctx.bot.database.get_author_of_thread(ctx.channel.id) is not None and role is None:
                 raise errors.NotThreadAuthor(f"This command may only be used by someone with the `{config.trustee_role}` role or the user who started the thread.")
             return True
         return commands.check(predicate)
@@ -63,10 +56,7 @@ class Channels(commands.Cog):
             description=f"A new thread has been started in {channel.mention} by {ctx.author.mention}.",
             color=discord.Color(0x007fff)))
 
-        conn = self.bot.conn
-        c = conn.cursor()
-        c.execute("INSERT INTO threads VALUES (?, ?)", (channel.id, ctx.author.id))
-        conn.commit()
+        await self.bot.database.create_thread(ctx.channel.id, ctx.author.id)
 
     @thread.error
     async def thread_error(self, ctx, error):
