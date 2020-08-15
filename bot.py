@@ -7,8 +7,14 @@ import sqlite3
 import config
 
 class Bot(commands.Bot):
-    def __init__(self, *args, **kwargs): 
+    def __init__(self, conn, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.conn = conn
+
+        # create db tables if they don't exist already
+        c = self.conn.cursor()
+        c.execute("CREATE TABLE IF NOT EXISTS threads (channel_id, author_id)")
+        conn.commit()
 
         for extension in [f for f in os.listdir("extensions") if f.endswith(".py")]:
             try:
