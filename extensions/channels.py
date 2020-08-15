@@ -19,7 +19,8 @@ class Channels(commands.Cog):
         # Only raises an error if the user isn't the thread author and doesn't have the Trustee role. If you want an error message for not being in a thread, also use channel_is_thread.
         async def predicate(ctx):
             role = discord.utils.find(lambda r: r.name==config.trustee_role, ctx.author.roles)
-            if ctx.bot.database.get_author_of_thread(ctx.channel.id) is not None and role is None:
+            thread_author_id = ctx.bot.database.get_author_of_thread(ctx.channel.id)
+            if (thread_author_id is None or ctx.author.id!=thread_author_id) and role is None:
                 raise errors.NotThreadAuthor(f"This command may only be used by someone with the `{config.trustee_role}` role or the user who started the thread.")
             return True
         return commands.check(predicate)
