@@ -1,6 +1,8 @@
 import asyncio
 import asyncpg
 
+import config
+
 async def create_pool():
     pool = await asyncpg.create_pool(user=config.db_user, password=config.db_pass, host=config.db_host, database=config.db_name)
     async with pool.acquire() as conn:
