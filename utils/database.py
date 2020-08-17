@@ -11,6 +11,7 @@ async def create_pool():
                 author_id BIGINT NOT NULL
             );
         """)
+    return pool
 
 class Database():
     def __init__(self):
