@@ -4,7 +4,11 @@ import asyncpg
 async def create_pool():
     pool = await asyncpg.create_pool(dsn='postgresql://guildbot:gu1ldb0t@localhost/guildbot')
     async with pool.acquire() as conn:
-        await conn.execute("CREATE TABLE IF NOT EXISTS threads (channel_id, author_id)")
+        await conn.execute("""CREATE TABLE IF NOT EXISTS threads (
+                channel_id BIGINT PRIMARY KEY,
+                author_id BIGINT NOT NULL
+            );
+        """)
 
 class Database():
     def __init__(self):
