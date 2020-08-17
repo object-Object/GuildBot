@@ -57,7 +57,7 @@ class Channels(commands.Cog):
             description=f"A new thread has been started in {channel.mention} by {ctx.author.mention}.",
             color=discord.Color(0x007fff)))
 
-        await self.bot.database.create_thread(ctx.channel.id, ctx.author.id)
+        await self.bot.database.create_thread(channel, ctx.author.id)
 
     @thread.error
     async def thread_error(self, ctx, error):
