@@ -2,7 +2,7 @@ import asyncio
 import asyncpg
 
 async def create_pool():
-    pool = await asyncpg.create_pool(dsn='postgresql://guildbot:gu1ldb0t@localhost/guildbot')
+    pool = await asyncpg.create_pool(user=config.db_user, password=config.db_pass, host=config.db_host, database=config.db_name)
     async with pool.acquire() as conn:
         await conn.execute("""CREATE TABLE IF NOT EXISTS threads (
                 channel_id BIGINT PRIMARY KEY,
