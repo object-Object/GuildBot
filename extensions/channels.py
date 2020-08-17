@@ -10,7 +10,7 @@ class Channels(commands.Cog):
 
     def channel_is_thread():
         async def predicate(ctx):
-            if ctx.bot.database.get_thread(ctx.channel.id) is None:
+            if await ctx.bot.database.get_thread(ctx.channel.id) is None:
                 raise errors.ThreadOnly(f"This command may only be used in a channel that was created using the `{ctx.bot.command_prefix}thread` command.")
             return True
         return commands.check(predicate)
@@ -19,7 +19,7 @@ class Channels(commands.Cog):
         # Only raises an error if the user isn't the thread author and doesn't have the Trustee role. If you want an error message for not being in a thread, also use channel_is_thread.
         async def predicate(ctx):
             role = discord.utils.find(lambda r: r.name==config.trustee_role, ctx.author.roles)
-            thread_author_id = ctx.bot.database.get_author_of_thread(ctx.channel.id)
+            thread_author_id = await ctx.bot.database.get_author_of_thread(ctx.channel.id)
             if (thread_author_id is None or ctx.author.id!=thread_author_id) and role is None:
                 raise errors.NotThreadAuthor(f"This command may only be used by someone with the `{config.trustee_role}` role or the user who started the thread.")
             return True
