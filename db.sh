@@ -6,5 +6,5 @@ sudo apt-get install postgresql postgresql-contrib
 echo "Starting postgres server in case of it being offline"
 sudo service postgresql start
 echo "Creating the user and database"
-sudo -u postgres psql -c "CREATE USER guildbot WITH PASSWORD 'gu1ldb0t'; ALTER USER guildbot WITH SUPERUSER;" -c "CREATE DATABASE guildbot;"
+sudo -u postgres psql -c "CREATE USER guildbot WITH PASSWORD 'gu1ldb0t';" -c "CREATE DATABASE guildbot;"
 echo "Installed and established database and user. Finished!"
