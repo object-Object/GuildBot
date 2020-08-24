@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import traceback
 import sys
+from utils import errors
 
 class CommandErrorHandler(commands.Cog):
 
@@ -58,6 +59,12 @@ class CommandErrorHandler(commands.Cog):
             await ctx.send(embed=discord.Embed(
                 title=command_not_run,
                 description=str(error),
+                color=discord.Color(0xff0000)))
+
+        elif isinstance(error, errors.NotTrustee):
+            await ctx.send(embed=discord.Embed(
+                title=command_not_run,
+                description=f"`{self.bot.command_prefix}{ctx.command}` may only be used by Trustees or the guild owner.",
                 color=discord.Color(0xff0000)))
 
         else:

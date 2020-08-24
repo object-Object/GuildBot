@@ -8,3 +8,6 @@ class NotThreadAuthor(commands.CheckFailure):
 
 class GuildMissingCategory(commands.CheckFailure):
     pass
+
+class NotTrustee(commands.CheckFailure):
+    pass

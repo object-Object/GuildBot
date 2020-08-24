@@ -8,6 +8,13 @@ class CategoryConverter(commands.Converter):
             return await commands.CategoryChannelConverter().convert(ctx, argument)
         return channel
 
+class RoleConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        role = discord.utils.find(lambda r: r.name.lower()==argument.lower(), ctx.guild.roles)
+        if not isinstance(role, discord.Role):
+            return await commands.RoleConverter().convert(ctx, argument)
+        return role
+
 class ThreadConverter(commands.Converter):
     async def convert(self, ctx, argument):
         channel = discord.utils.find(lambda c: c.name.lower()==argument.lower(), ctx.guild.text_channels)
