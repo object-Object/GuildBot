@@ -32,4 +32,4 @@ class Database():
     
     async def create_thread(self, channel_id, author_id, category_id):
         async with self.pool.acquire() as conn:
-            return await conn.fetchrow("INSERT INTO threads (channel_id, author_id, category_id) VALUES($1, $2, $3)", channel_id, author_id)
+            return await conn.fetchrow("INSERT INTO threads (channel_id, author_id, category_id) VALUES($1, $2, $3)", channel_id, author_id, category_id)

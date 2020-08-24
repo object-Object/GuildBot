@@ -5,10 +5,10 @@ import re
 from utils import errors, converters
 
 async def user_can_edit_thread(bot, user, channel):
-    role = discord.utils.find(lambda r: r.name==config.trustee_role, user.roles)
+    role = channel.guild.get_role(bot.settings.trustee_role)
     thread_author_id = await bot.database.get_author_of_thread(channel.id)
-    if thread_author_id is not None and user.id!=thread_author_id and role is None:
-        raise errors.NotThreadAuthor(f"This command may only be used by someone with the `{config.trustee_role}` role or the user who started the thread.")
+    if thread_author_id is not None and user.id!=thread_author_id and not role in user.roles:
+        raise errors.NotThreadAuthor(f"This command may only be used by someone with the Trustee role or the user who started the thread.")
     return True
 
 class Channels(commands.Cog):
@@ -31,8 +31,14 @@ class Channels(commands.Cog):
     @commands.command(brief="Starts a new thread.", help="If the title or category contain spaces, it must be put into quotes. The content does **not** need to be put into quotes.")
     @commands.guild_only()
     async def thread(self, ctx, category: converters.CategoryConverter, title, *, content):
-        if not category.name.lower() in config.allowed_thread_categories:
-            raise commands.BadArgument(f"The category's name must be one of `{'`, `'.join(config.allowed_thread_categories)}` (case-insensitive).")
+        if not category.id in ctx.bot.settings.thread_categories:
+            category_names = []
+            for category_id in ctx.bot.settings.thread_categories:
+                try:
+                    category_names.append(ctx.guild.get_channel(category_id).name)
+                except AttributeError:
+                    pass
+            raise commands.BadArgument(f"category must be one of the following: `{'`, `'.join(category_names)}`.")
         if not ctx.author.permissions_in(category).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         if len(title)>256:
@@ -76,9 +82,9 @@ class Channels(commands.Cog):
     @channel_is_thread()
     @author_can_archive()
     async def archive(self, ctx, *, reason):
-        category = discord.utils.find(lambda c: c.name.lower()==config.archive_category.lower(), ctx.guild.categories)
+        category = ctx.guild.get_channel(ctx.bot.settings.archive_category)
         if category is None:
-            raise errors.GuildMissingCategory(f'Category "{config.archive_category}" not found.')
+            raise errors.GuildMissingCategory(f'Archive category not found.')
 
         await ctx.send(embed=discord.Embed(
             title="Thread archived",
