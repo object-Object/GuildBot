@@ -6,6 +6,7 @@ default_settings = {  # key: setting name, value: default value
     "thread_categories": [],
     "archive_category": None,
     "trustee_role": None,
+    "welcome_channel": None,
     }
 
 class Settings():

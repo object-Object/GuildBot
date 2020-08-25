@@ -7,7 +7,7 @@ class Settings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["trustee-role", "trole"])
+    @commands.command(aliases=["trole"])
     @commands.guild_only()
     @checks.trustee_only()
     async def trusteerole(self, ctx, role: typing.Optional[converters.RoleConverter]):
@@ -25,7 +25,7 @@ class Settings(commands.Cog):
                 description=f"The Trustee role has been set to {role.mention}.",
                 color=discord.Color(0x007fff)))
 
-    @commands.command(aliases=["archive-category", "archivecat"])
+    @commands.command(aliases=["archivecat"])
     @commands.guild_only()
     @checks.trustee_only()
     async def archivecategory(self, ctx, category: typing.Optional[converters.CategoryConverter]):
@@ -43,7 +43,7 @@ class Settings(commands.Cog):
                 description=f"The archive category has been set to `{category.name}`.",
                 color=discord.Color(0x007fff)))
 
-    @commands.group(aliases=["thread-categories", "threadcats"], invoke_without_command=True)
+    @commands.group(aliases=["threadcats"], invoke_without_command=True)
     @commands.guild_only()
     @checks.trustee_only()
     async def threadcategories(self, ctx):
@@ -94,6 +94,24 @@ class Settings(commands.Cog):
             await ctx.send(embed=discord.Embed(
                 title="Updated value",
                 description=f"The following have been removed from the thread categories: `{'`, `'.join(category_names)}`.",
+                color=discord.Color(0x007fff)))
+
+    @commands.command(aliases=["welcomechan"])
+    @commands.guild_only()
+    @checks.trustee_only()
+    async def welcomechannel(self, ctx, channel: typing.Optional[converters.TextChannelConverter]):
+        if channel is None:
+            current_channel=ctx.guild.get_channel(ctx.bot.settings.welcome_channel)
+            await ctx.send(embed=discord.Embed(
+                title="Current value",
+                description=f"The welcome channel is currently {current_channel.mention if current_channel else 'not set'}.",
+                color=discord.Color(0x007fff)))
+        else:
+            ctx.bot.settings.welcome_channel=channel.id
+            ctx.bot.settings.save()
+            await ctx.send(embed=discord.Embed(
+                title="Updated value",
+                description=f"The welcome channel has been set to {channel.mention}.",
                 color=discord.Color(0x007fff)))
 
 # Load extension
