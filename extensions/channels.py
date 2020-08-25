@@ -85,6 +85,8 @@ class Channels(commands.Cog):
         category = ctx.guild.get_channel(ctx.bot.settings.archive_category)
         if category is None:
             raise errors.GuildMissingCategory(f'Archive category not found.')
+        if ctx.channel.category.id==self.bot.settings.archive_category:
+            return
 
         await ctx.send(embed=discord.Embed(
             title="Thread archived",
@@ -108,6 +110,8 @@ class Channels(commands.Cog):
         if not ctx.author.permissions_in(channel).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         await user_can_edit_thread(ctx.bot, ctx.author, channel)  # will raise an exception if they can't edit the thread
+        if channel.category.id!=self.bot.settings.archive_category:
+            raise commands.BadArgument(f"{channel.mention} is not archived.")
 
         category = ctx.guild.get_channel(await self.bot.database.get_category_of_thread(channel.id))
 
@@ -148,7 +152,6 @@ class Channels(commands.Cog):
         elif isinstance(error, commands.BadArgument):  # actually only used for necro
             await ctx.send(embed=discord.Embed(
                 title="Command failed!",
-                # replacing Channel with Category at the start of the string because the default error message from CategoryChannelConverter is bad
                 description=str(error),
                 color=discord.Color(0xff0000)))
 
