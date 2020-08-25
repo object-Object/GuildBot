@@ -8,6 +8,13 @@ class CategoryConverter(commands.Converter):
             return await commands.CategoryChannelConverter().convert(ctx, argument)
         return channel
 
+class TextChannelConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        channel = discord.utils.find(lambda c: c.name.lower()==argument.lower(), ctx.guild.text_channels)
+        if not isinstance(channel, discord.TextChannel):
+            return await commands.TextChannelConverter().convert(ctx, argument)
+        return channel
+
 class RoleConverter(commands.Converter):
     async def convert(self, ctx, argument):
         role = discord.utils.find(lambda r: r.name.lower()==argument.lower(), ctx.guild.roles)
@@ -19,5 +26,7 @@ class ThreadConverter(commands.Converter):
     async def convert(self, ctx, argument):
         channel = discord.utils.find(lambda c: c.name.lower()==argument.lower(), ctx.guild.text_channels)
         if not isinstance(channel, discord.TextChannel):
-            return await commands.TextChannelConverter().convert(ctx, argument)
+            channel = await commands.TextChannelConverter().convert(ctx, argument)
+        if not await ctx.bot.database.get_thread(channel.id):
+            raise commands.BadArgument(f"{channel.mention} is not a thread.")
         return channel
