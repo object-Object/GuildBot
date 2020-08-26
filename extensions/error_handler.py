@@ -51,26 +51,26 @@ class CommandErrorHandler(commands.Cog):
 
         elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(embed=discord.Embed(
-                title=command_failed,
-                description=f"{error}\nCommand usage: `{self.bot.command_prefix}{ctx.command.qualified_name} {ctx.command.signature}`",
-                color=discord.Color(0xff0000)))
-
-        elif isinstance(error, commands.MissingPermissions):
-            await ctx.send(embed=discord.Embed(
                 title=command_not_run,
-                description=str(error),
-                color=discord.Color(0xff0000)))
-
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(embed=discord.Embed(
-                title="Command failed!",
-                description=str(error),
+                description=f"{error}\nCommand usage: `{self.bot.command_prefix}{ctx.command.qualified_name} {ctx.command.signature}`",
                 color=discord.Color(0xff0000)))
 
         elif isinstance(error, errors.NotTrustee):
             await ctx.send(embed=discord.Embed(
                 title=command_not_run,
                 description=f"`{self.bot.command_prefix}{ctx.command}` may only be used by Trustees or the guild owner.",
+                color=discord.Color(0xff0000)))
+
+        elif isinstance(error, errors.CommandFailed):
+            await ctx.send(embed=discord.Embed(
+                title=command_failed,
+                description=str(error),
+                color=discord.Color(0xff0000)))
+
+        elif isinstance(error, commands.MissingPermissions) or isinstance(error, commands.BadArgument) or isinstance(error, commands.CheckFailure):
+            await ctx.send(embed=discord.Embed(
+                title=command_not_run,
+                description=str(error),
                 color=discord.Color(0xff0000)))
 
         else:
