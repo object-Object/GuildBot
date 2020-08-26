@@ -61,6 +61,12 @@ class CommandErrorHandler(commands.Cog):
                 description=str(error),
                 color=discord.Color(0xff0000)))
 
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(embed=discord.Embed(
+                title="Command failed!",
+                description=str(error),
+                color=discord.Color(0xff0000)))
+
         elif isinstance(error, errors.NotTrustee):
             await ctx.send(embed=discord.Embed(
                 title=command_not_run,

@@ -149,11 +149,6 @@ class Channels(commands.Cog):
                 title="Command failed!",
                 description=str(error),
                 color=discord.Color(0xff0000)))
-        elif isinstance(error, commands.BadArgument):  # actually only used for necro
-            await ctx.send(embed=discord.Embed(
-                title="Command failed!",
-                description=str(error),
-                color=discord.Color(0xff0000)))
 
 # Load extension
 def setup(bot):
@@ -168,7 +163,6 @@ def setup(bot):
         errors.ThreadOnly,
         errors.NotThreadAuthor,
         errors.GuildMissingCategory,
-        commands.BadArgument,
         )
 
 # Unload extension
