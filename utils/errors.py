@@ -11,3 +11,6 @@ class GuildMissingCategory(commands.CheckFailure):
 
 class NotTrustee(commands.CheckFailure):
     pass
+
+class CommandFailed(commands.CommandError):
+    pass
