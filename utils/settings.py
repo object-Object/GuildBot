@@ -1,6 +1,7 @@
-import json
-import config
 import copy
+import json
+
+import config
 
 default_settings = {  # key: setting name, value: default value
     "thread_categories": [],
@@ -8,6 +9,7 @@ default_settings = {  # key: setting name, value: default value
     "trustee_role": None,
     "welcome_channel": None,
     }
+
 
 class Settings():
     def __init__(self):
@@ -25,6 +27,6 @@ class Settings():
 
     def save(self):
         """Write the current setting values to the json file."""
-        file_json = dict([ (s, getattr(self, s)) for s in default_settings ])
+        file_json = {s: getattr(self, s) for s in default_settings}
         with open(config.settings_filename, "w") as f:
             json.dump(file_json, f)

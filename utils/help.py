@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+
 class GuildBotHelp(commands.HelpCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -14,20 +15,20 @@ class GuildBotHelp(commands.HelpCommand):
         fields = []
         for cog in mapping.keys():
             if cog:
-                if len(mapping[cog])>0:
+                if mapping[cog]:
                     name = cog.qualified_name
                 else:
                     name = None
             else:
                 name = "Uncategorized"
             if name is not None:
-                fields.append((name, f"`{'`, `'.join([command.name for command in mapping[cog]])}`" ))
+                fields.append((name, f"`{'`, `'.join([command.name for command in mapping[cog]])}`"))
         fields.sort()
         for field in fields:
             embed.add_field(name=field[0], value=field[1])
 
         await self.get_destination().send(embed=embed)
-    
+
     async def send_cog_help(self, cog):
         embed = discord.Embed(
             title=cog.qualified_name,
@@ -36,24 +37,31 @@ class GuildBotHelp(commands.HelpCommand):
 
         for command in cog.get_commands():
             embed.add_field(name=command.name, value=command.brief)
-        
+
         await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
         embed = discord.Embed(
             title=group.name,
-            description="`{}`{}{}".format(self.get_command_signature(group), ' - '+group.brief if group.brief is not None else '', '\n\n'+group.help if group.help is not None else ''),
+            description="`{0}`{1}{2}".format(
+                self.get_command_signature(group),
+                " - " + group.brief if group.brief is not None else "",
+                "\n\n" + group.help if group.help is not None else "",
+                ),
             color=discord.Color(0x007fff))
 
         for command in group.commands:
             embed.add_field(name=command.name, value=command.brief)
-        
+
         await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, command):
         await self.get_destination().send(embed=discord.Embed(
             title=command.name,
-            description="`{}`{}{}".format(self.get_command_signature(command), ' - '+command.brief if command.brief is not None else '', '\n\n'+command.help if command.help is not None else ''),
+            description="`{}`{}{}".format(
+                self.get_command_signature(command),
+                " - " + command.brief if command.brief is not None else "",
+                "\n\n" + command.help if command.help is not None else ""),
             color=discord.Color(0x007fff)))
 
     async def send_error_message(self, error):

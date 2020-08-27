@@ -1,17 +1,19 @@
-import discord
 import os
+
+import discord
 from discord.ext import commands
+
 
 class Owner(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(invoke_without_command=True, aliases=["ext"], brief="Lists all extensions in the bot, loaded or unloaded.")
+    @commands.group(invoke_without_command=True, aliases=["ext"], brief="Lists all extensions available.")
     @commands.is_owner()
     async def extensions(self, ctx):
         await ctx.send(embed=discord.Embed(
             title="List of extensions",
-            description=f"`{'`, `'.join(sorted([f[:-3] for f in os.listdir('extensions') if f.endswith('.py')]))}`",
+            description=f"`{'`, `'.join((f[:-3] for f in os.listdir('extensions') if f.endswith('.py')))}`",
             color=discord.Color(0x007fff)))
 
     @extensions.command(brief="Loads an extension by name.")
@@ -32,10 +34,10 @@ class Owner(commands.Cog):
     @extensions.command(brief="Unloads an extension by name.")
     @commands.is_owner()
     async def unload(self, ctx, extension: str):
-        if extension=="owner":
+        if extension == "owner":
             await ctx.send(embed=discord.Embed(
                 title="Command failed!",
-                description=f"Extension `owner` cannot be unloaded.",
+                description="Extension `owner` cannot be unloaded.",
                 color=discord.Color(0xff0000)))
             return
 
@@ -66,8 +68,10 @@ class Owner(commands.Cog):
                 description=f"Successfully reloaded extension `{extension}`.",
                 color=discord.Color(0x007fff)))
 
+
 def setup(bot):
     bot.add_cog(Owner(bot))
 
+
 def teardown(bot):
-    bot.remove_cog('Owner')
+    bot.remove_cog("Owner")

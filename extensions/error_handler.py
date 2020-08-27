@@ -1,8 +1,11 @@
+import sys
+import traceback
+
 import discord
 from discord.ext import commands
-import traceback
-import sys
+
 from utils import errors
+
 
 class CommandErrorHandler(commands.Cog):
 
@@ -46,7 +49,7 @@ class CommandErrorHandler(commands.Cog):
         elif isinstance(error, commands.NotOwner):
             await ctx.send(embed=discord.Embed(
                 title=command_not_run,
-                description=f"`{self.bot.command_prefix}{ctx.command}` may only be used by the bot owner, and you do not own this bot.",
+                description=f"`{self.bot.command_prefix}{ctx.command}` may only be used by the bot owner.",
                 color=discord.Color(0xff0000)))
 
         elif isinstance(error, commands.MissingRequiredArgument):
@@ -67,18 +70,20 @@ class CommandErrorHandler(commands.Cog):
                 description=str(error),
                 color=discord.Color(0xff0000)))
 
-        elif isinstance(error, commands.MissingPermissions) or isinstance(error, commands.BadArgument) or isinstance(error, commands.CheckFailure):
+        elif isinstance(error, (commands.MissingPermissions, commands.BadArgument, commands.CheckFailure)):
             await ctx.send(embed=discord.Embed(
                 title=command_not_run,
                 description=str(error),
                 color=discord.Color(0xff0000)))
 
         else:
-            print("\nIgnoring exception in command {}:".format(ctx.command), file=sys.stderr)
+            print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
 
 def setup(bot):
     bot.add_cog(CommandErrorHandler(bot))
+
 
 def teardown(bot):
     bot.remove_cog("CommandErrorHandler")
