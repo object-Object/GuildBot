@@ -1,0 +1,9 @@
+[flake8]
+ignore = D1
+max-line-length = 125
+hang-closing = True
+show-source = True
+max-complexity = 10
+
+# Force double quotes
+inline-quotes = double

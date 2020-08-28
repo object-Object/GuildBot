@@ -1,20 +1,23 @@
+import typing
+
 import discord
 from discord.ext import commands
-from utils import converters, checks, errors
-import typing
-import inspect
+
+from utils import checks, converters, errors
 
 display_lookup = {
     discord.Role: "mention",
     discord.CategoryChannel: "name",
     discord.TextChannel: "mention",
-}
+    }
+
 
 def display(obj):
-    for k,v in display_lookup.items():
+    for k, v in display_lookup.items():
         if isinstance(obj, k):
             return getattr(obj, v)
     raise Exception(f"Type {type(obj)} not found in display_lookup")
+
 
 async def set_single_setting(ctx, setting_key, old_obj, new_obj):
     if new_obj is None:
@@ -30,6 +33,7 @@ async def set_single_setting(ctx, setting_key, old_obj, new_obj):
             description=f"`{setting_key}` has been {f'changed from {display(old_obj)}' if old_obj else 'set'} to {display(new_obj)}.",
             color=discord.Color(0x007fff)))
 
+
 async def show_list_setting(ctx, setting_key, get_func):
     obj_displays = []
     for obj_id in getattr(ctx.bot.settings, setting_key):
@@ -39,8 +43,9 @@ async def show_list_setting(ctx, setting_key, get_func):
             pass
     await ctx.send(embed=discord.Embed(
         title="Current value",
-        description=f"The current values of `{setting_key}` are: {', '.join(obj_displays) if obj_displays else '(none set)'}.",
+        description=f"The current values of `{setting_key}` are: {', '.join(obj_displays) if obj_displays else '(not set)'}.",
         color=discord.Color(0x007fff)))
+
 
 async def add_to_list_setting(ctx, setting_key, objs):
     obj_displays = []
@@ -65,6 +70,7 @@ async def add_to_list_setting(ctx, setting_key, objs):
             title="Updated value",
             description=f"The following values have been added to `{setting_key}`: {', '.join(obj_displays)}.",
             color=discord.Color(0x007fff)))
+
 
 async def remove_from_list_setting(ctx, setting_key, objs):
     obj_displays = []
@@ -91,6 +97,7 @@ async def remove_from_list_setting(ctx, setting_key, objs):
             description=f"The following values have been removed from `{setting_key}`: {', '.join(obj_displays)}.",
             color=discord.Color(0x007fff)))
 
+
 class Settings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -104,14 +111,12 @@ class Settings(commands.Cog):
             raise errors.CommandFailed("`trustee_role` cannot be changed once set.")
         await set_single_setting(ctx, "trustee_role", old_role, new_role)
 
-
     @commands.command(aliases=["archivecat"])
     @commands.guild_only()
     @checks.trustee_only()
     async def archivecategory(self, ctx, new_category: typing.Optional[converters.CategoryConverter]):
         old_category = ctx.guild.get_channel(ctx.bot.settings.archive_category)
         await set_single_setting(ctx, "archive_category", old_category, new_category)
-
 
     @commands.group(aliases=["threadcats"], invoke_without_command=True)
     @commands.guild_only()
@@ -135,7 +140,6 @@ class Settings(commands.Cog):
             raise commands.MissingRequiredArgument(ctx.command.clean_params["categories"])
         await remove_from_list_setting(ctx, "thread_categories", categories)
 
-
     @commands.command(aliases=["welcomechan"])
     @commands.guild_only()
     @checks.trustee_only()
@@ -143,9 +147,11 @@ class Settings(commands.Cog):
         old_channel = ctx.guild.get_channel(ctx.bot.settings.welcome_channel)
         await set_single_setting(ctx, "welcome_channel", old_channel, new_channel)
 
+
 # Load extension
 def setup(bot):
     bot.add_cog(Settings(bot))
+
 
 # Unload extension
 def teardown(bot):

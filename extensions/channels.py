@@ -1,15 +1,18 @@
+import re
+
 import discord
 from discord.ext import commands
-import config
-import re
-from utils import errors, converters
+
+from utils import converters, errors
+
 
 async def user_can_edit_thread(bot, user, channel):
     role = channel.guild.get_role(bot.settings.trustee_role)
     thread_author_id = await bot.database.get_author_of_thread(channel.id)
-    if thread_author_id is not None and user.id!=thread_author_id and not role in user.roles:
-        raise errors.NotThreadAuthor(f"This command may only be used by someone with the Trustee role or the user who started the thread.")
+    if thread_author_id is not None and user.id != thread_author_id and role not in user.roles:
+        raise errors.NotThreadAuthor()
     return True
+
 
 class Channels(commands.Cog):
     def __init__(self, bot):
@@ -18,20 +21,24 @@ class Channels(commands.Cog):
     def channel_is_thread():
         async def predicate(ctx):
             if await ctx.bot.database.get_thread(ctx.channel.id) is None:
-                raise errors.ThreadOnly(f"This command may only be used in a channel that was created using the `{ctx.bot.command_prefix}thread` command.")
+                raise errors.ThreadOnly()
             return True
         return commands.check(predicate)
 
     def author_can_archive():
-        # Only raises an error if the user isn't the thread author and doesn't have the Trustee role. If you want an error message for not being in a thread, also use channel_is_thread.
+        # Raises an error if the user isn't the thread author, or a Trustee.
+        # Should be used with channel_is_thread for checking if thread
         async def predicate(ctx):
             return await user_can_edit_thread(ctx.bot, ctx.author, ctx.channel)
         return commands.check(predicate)
 
-    @commands.command(brief="Starts a new thread.", help="If the title or category contain spaces, it must be put into quotes. The content does **not** need to be put into quotes.")
+    @commands.command(
+        brief="Starts a new thread.",
+        help="If the title or category contains spaces it must be put in quotes. The content should not be put into quotes.",
+        )
     @commands.guild_only()
     async def thread(self, ctx, category: converters.CategoryConverter, title, *, content):
-        if not category.id in ctx.bot.settings.thread_categories:
+        if category.id not in ctx.bot.settings.thread_categories:
             category_names = []
             for category_id in ctx.bot.settings.thread_categories:
                 try:
@@ -41,7 +48,7 @@ class Channels(commands.Cog):
             raise commands.BadArgument(f"category must be one of the following: `{'`, `'.join(category_names)}`.")
         if not ctx.author.permissions_in(category).view_channel:
             raise commands.MissingPermissions(["view_channel"])
-        if len(title)>256:
+        if len(title) > 256:
             raise(commands.BadArgument("title must not be longer than 256 characters."))
 
         channel_name = re.sub(r"\s+", "-", title.lower())  # replace spaces with a single dash
@@ -49,8 +56,8 @@ class Channels(commands.Cog):
         channel_name = re.sub(r"\-+", "-", channel_name)  # collapse multiple dashes into a single dash
         channel_name = re.sub(r"^\-", "", channel_name)  # remove leading dashes
         channel_name = re.sub(r"\-$", "", channel_name)  # remove trailing dashes
-        if len(channel_name)>999 or len(channel_name)<1:
-            raise commands.BadArgument("title must be 1-999 characters long after being formatted into a valid channel name.")
+        if len(channel_name) > 999 or len(channel_name) < 1:
+            raise commands.BadArgument("Title must be 1-999 characters after being formatted into a valid channel name.")
 
         channel = await category.create_text_channel(channel_name, topic=f"Thread started by {ctx.author.mention}.")
         message = await channel.send(embed=discord.Embed(
@@ -58,8 +65,8 @@ class Channels(commands.Cog):
             description=content,
             color=discord.Color(0x007fff)).set_footer(
                 text=f"Thread started by {ctx.author.display_name}",
-                icon_url=ctx.author.avatar_url
-                ))
+                icon_url=ctx.author.avatar_url,
+            ))
         await message.pin()
         await ctx.send(embed=discord.Embed(
             title="Thread started",
@@ -73,19 +80,22 @@ class Channels(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send(embed=discord.Embed(
                 title="Command failed!",
-                # replacing Channel with Category at the start of the string because the default error message from CategoryChannelConverter is bad
+                # replace Channel with Category in default error message for clarity
                 description=re.sub(r"^Channel", "Category", str(error)),
                 color=discord.Color(0xff0000)))
 
-    @commands.command(brief="Archives the channel it is used in.", help="Must be used in a channel that was created using the `thread` command.", )
+    @commands.command(
+        brief="Archives the channel it is used in.",
+        help="Must be used in a channel that was created using the `thread` command.",
+        )
     @commands.guild_only()
     @channel_is_thread()
     @author_can_archive()
     async def archive(self, ctx, *, reason):
         category = ctx.guild.get_channel(ctx.bot.settings.archive_category)
         if category is None:
-            raise errors.GuildMissingCategory(f'Archive category not found.')
-        if ctx.channel.category.id==self.bot.settings.archive_category:
+            raise errors.GuildMissingCategory("Archive category not found.")
+        if ctx.channel.category.id == self.bot.settings.archive_category:
             return
 
         await ctx.send(embed=discord.Embed(
@@ -95,7 +105,7 @@ class Channels(commands.Cog):
                 text=f"Thread archived by {ctx.author.display_name}",
                 icon_url=ctx.author.avatar_url))
 
-        overwrites={ctx.guild.default_role: discord.PermissionOverwrite(
+        overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(
             send_messages=False,
             manage_messages=False,
             add_reactions=False,
@@ -104,18 +114,22 @@ class Channels(commands.Cog):
             category=category,
             overwrites=overwrites)
 
-    @commands.command(brief="Necroes (un-archives) the specified channel.", help="The specified channel must have been created using the `thread` command.", aliases=["unarchive", "un-archive"])
+    @commands.command(
+        brief="Necroes (un-archives) the specified channel.",
+        help="The specified channel must have been created using the `thread` command.",
+        aliases=["unarchive", "un-archive"],
+        )
     @commands.guild_only()
     async def necro(self, ctx, channel: converters.ThreadConverter, *, reason):
         if not ctx.author.permissions_in(channel).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         await user_can_edit_thread(ctx.bot, ctx.author, channel)  # will raise an exception if they can't edit the thread
-        if channel.category.id!=self.bot.settings.archive_category:
+        if channel.category.id != self.bot.settings.archive_category:
             raise commands.BadArgument(f"{channel.mention} is not archived.")
 
         category = ctx.guild.get_channel(await self.bot.database.get_category_of_thread(channel.id))
 
-        overwrites={ctx.guild.default_role: discord.PermissionOverwrite(
+        overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(
             send_messages=None,
             manage_messages=None,
             add_reactions=None,
@@ -150,20 +164,22 @@ class Channels(commands.Cog):
                 description=str(error),
                 color=discord.Color(0xff0000)))
 
+
 # Load extension
 def setup(bot):
     bot.add_cog(Channels(bot))
-    bot.get_command("thread").handled_errors=(commands.BadArgument,)
-    bot.get_command("archive").handled_errors=(
+    bot.get_command("thread").handled_errors = (commands.BadArgument,)
+    bot.get_command("archive").handled_errors = (
         errors.ThreadOnly,
         errors.NotThreadAuthor,
         errors.GuildMissingCategory,
         )
-    bot.get_command("necro").handled_errors=(
+    bot.get_command("necro").handled_errors = (
         errors.ThreadOnly,
         errors.NotThreadAuthor,
         errors.GuildMissingCategory,
         )
+
 
 # Unload extension
 def teardown(bot):
