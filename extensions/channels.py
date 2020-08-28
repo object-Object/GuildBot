@@ -34,7 +34,8 @@ class Channels(commands.Cog):
 
     @commands.command(
         brief="Starts a new thread.",
-        help="If the title or category contains spaces it must be put in quotes. The content should not be put into quotes.")
+        help="If the title or category contains spaces it must be put in quotes. The content should not be put into quotes.",
+        )
     @commands.guild_only()
     async def thread(self, ctx, category: converters.CategoryConverter, title, *, content):
         if category.id not in ctx.bot.settings.thread_categories:
