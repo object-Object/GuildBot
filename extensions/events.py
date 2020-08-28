@@ -18,6 +18,13 @@ class Events(commands.Cog):
             embed.set_footer(text=f"Using Discord since {member.created_at.date()}")
             embed.set_thumbnail(url=member.avatar_url)
             await welcome_channel.send(embed=embed)
+        autoroles = []
+        for role_id in self.bot.settings.autoroles:
+            role = member.guild.get_role(role_id)
+            if role:
+                autoroles.append(role)
+        if autoroles:
+            await member.add_roles(*autoroles)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
