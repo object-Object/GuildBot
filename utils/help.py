@@ -12,20 +12,11 @@ class GuildBotHelp(commands.HelpCommand):
             description="Listing all top-level commands and groups. Specify a command to see more information.",
             color=discord.Color(0x007fff))
 
-        fields = []
         for cog in mapping.keys():
-            if cog:
-                if mapping[cog]:
-                    name = cog.qualified_name
-                else:
-                    name = None
-            else:
-                name = "Uncategorized"
-            if name is not None:
-                fields.append((name, f"`{'`, `'.join([command.name for command in mapping[cog]])}`"))
-        fields.sort()
-        for field in fields:
-            embed.add_field(name=field[0], value=field[1])
+            if mapping[cog]:
+                embed.add_field(
+                    name=cog.qualified_name if cog.qualified_name else "Uncategorized",
+                    value=f"`{'`, `'.join([command.name for command in mapping[cog]])}`")
 
         await self.get_destination().send(embed=embed)
 
