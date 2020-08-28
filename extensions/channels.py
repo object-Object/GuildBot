@@ -80,7 +80,7 @@ class Channels(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send(embed=discord.Embed(
                 title="Command failed!",
-                # replace Channel with Category for clarity
+                # replace Channel with Category in default error message for clarity
                 description=re.sub(r"^Channel", "Category", str(error)),
                 color=discord.Color(0xff0000)))
 
