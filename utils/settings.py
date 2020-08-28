@@ -5,6 +5,7 @@ import config
 
 default_settings = {  # key: setting name, value: default value
     "thread_categories": [],
+    "autoroles": [],
     "archive_category": None,
     "trustee_role": None,
     "welcome_channel": None,

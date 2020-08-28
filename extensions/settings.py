@@ -127,7 +127,7 @@ class Settings(commands.Cog):
     @threadcategories.command()
     @commands.guild_only()
     @checks.trustee_only()
-    async def add(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
+    async def threadcats_add(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
         if not categories:  # this is needed because varargs by default are fine with having 0 arguments
             raise commands.MissingRequiredArgument(ctx.command.clean_params["categories"])
         await add_to_list_setting(ctx, "thread_categories", categories)
@@ -135,10 +135,32 @@ class Settings(commands.Cog):
     @threadcategories.command()
     @commands.guild_only()
     @checks.trustee_only()
-    async def remove(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
-        if not categories:  # this is needed because varargs by default are fine with having 0 arguments
+    async def threadcats_remove(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
+        if not categories:
             raise commands.MissingRequiredArgument(ctx.command.clean_params["categories"])
         await remove_from_list_setting(ctx, "thread_categories", categories)
+
+    @commands.group(invoke_without_command=True)
+    @commands.guild_only()
+    @checks.trustee_only()
+    async def autoroles(self, ctx):
+        await show_list_setting(ctx, "autoroles", ctx.guild.get_role)
+
+    @autoroles.command()
+    @commands.guild_only()
+    @checks.trustee_only()
+    async def autoroles_add(self, ctx, *roles: commands.Greedy[converters.RoleConverter]):
+        if not roles:
+            raise commands.MissingRequiredArgument(ctx.command.clean_params["roles"])
+        await add_to_list_setting(ctx, "autoroles", roles)
+
+    @autoroles.command()
+    @commands.guild_only()
+    @checks.trustee_only()
+    async def autoroles_remove(self, ctx, *roles: commands.Greedy[converters.RoleConverter]):
+        if not roles:
+            raise commands.MissingRequiredArgument(ctx.command.clean_params["roles"])
+        await remove_from_list_setting(ctx, "autoroles", roles)
 
     @commands.command(aliases=["welcomechan"])
     @commands.guild_only()
