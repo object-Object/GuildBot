@@ -1,9 +1,10 @@
 import re
+from typing import Optional
 
 import discord
 from discord.ext import commands
 
-from utils import converters, errors
+from utils import checks, converters, errors
 
 
 async def user_can_edit_thread(bot, user, channel):
@@ -12,6 +13,16 @@ async def user_can_edit_thread(bot, user, channel):
     if thread_author_id is not None and user.id != thread_author_id and role not in user.roles:
         raise errors.NotThreadAuthor()
     return True
+
+
+def raise_bad_category(ctx):
+    category_names = []
+    for category_id in ctx.bot.settings.thread_categories:
+        try:
+            category_names.append(ctx.guild.get_channel(category_id).name)
+        except AttributeError:
+            pass
+    raise commands.BadArgument(f"category must be one of the following: `{'`, `'.join(category_names)}`.")
 
 
 class Channels(commands.Cog):
@@ -39,13 +50,7 @@ class Channels(commands.Cog):
     @commands.guild_only()
     async def thread(self, ctx, category: converters.CategoryConverter, title, *, content):
         if category.id not in ctx.bot.settings.thread_categories:
-            category_names = []
-            for category_id in ctx.bot.settings.thread_categories:
-                try:
-                    category_names.append(ctx.guild.get_channel(category_id).name)
-                except AttributeError:
-                    pass
-            raise commands.BadArgument(f"category must be one of the following: `{'`, `'.join(category_names)}`.")
+            raise_bad_category(ctx)
         if not ctx.author.permissions_in(category).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         if len(title) > 256:
@@ -149,6 +154,30 @@ class Channels(commands.Cog):
             title="Thread necroed",
             description=f"The thread {channel.mention} has been necroed by {ctx.author.mention}.",
             color=discord.Color(0x007fff)))
+
+    @commands.command(name="import", brief="Imports a channel to the thread system. This cannot be undone.")
+    @commands.guild_only()
+    @checks.trustee_only()
+    async def cmd_import(self, ctx, channel: converters.TextChannelConverter,
+                         category: Optional[converters.CategoryConverter]):
+        if await ctx.bot.database.get_thread(channel.id):
+            raise commands.BadArgument(f"{channel.mention} is already a thread.")
+        if category is None:
+            if channel.category.id == ctx.bot.settings.archive_category:
+                raise commands.BadArgument(f"{channel.mention} is archived, so a valid category must be specified as an argument.")  # noqa: E501
+            category = channel.category
+        if category.id not in ctx.bot.settings.thread_categories:
+            raise_bad_category(ctx)
+
+        await ctx.send(embed=discord.Embed(
+            title="Thread imported",
+            description=f"{channel.mention} has been converted to a thread by {ctx.author.mention}, who has also been set as the thread's author.",  # noqa: E501
+            color=discord.Color(0x007fff)))
+
+        if channel.category.id not in (category.id, ctx.bot.settings.archive_category):
+            await channel.edit(category=category)
+
+        await ctx.bot.database.create_thread(channel.id, ctx.author.id, category.id)
 
     @archive.error
     @necro.error
