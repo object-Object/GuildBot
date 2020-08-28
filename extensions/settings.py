@@ -16,6 +16,8 @@ def display(obj):
     for k, v in display_lookup.items():
         if isinstance(obj, k):
             return getattr(obj, v)
+        elif obj is None:
+            raise AttributeError
     raise Exception(f"Type {type(obj)} not found in display_lookup")
 
 
@@ -124,7 +126,7 @@ class Settings(commands.Cog):
     async def threadcategories(self, ctx):
         await show_list_setting(ctx, "thread_categories", ctx.guild.get_channel)
 
-    @threadcategories.command()
+    @threadcategories.command(name="add")
     @commands.guild_only()
     @checks.trustee_only()
     async def threadcats_add(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
@@ -132,7 +134,7 @@ class Settings(commands.Cog):
             raise commands.MissingRequiredArgument(ctx.command.clean_params["categories"])
         await add_to_list_setting(ctx, "thread_categories", categories)
 
-    @threadcategories.command()
+    @threadcategories.command(name="remove")
     @commands.guild_only()
     @checks.trustee_only()
     async def threadcats_remove(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
@@ -146,7 +148,7 @@ class Settings(commands.Cog):
     async def autoroles(self, ctx):
         await show_list_setting(ctx, "autoroles", ctx.guild.get_role)
 
-    @autoroles.command()
+    @autoroles.command(name="add")
     @commands.guild_only()
     @checks.trustee_only()
     async def autoroles_add(self, ctx, *roles: commands.Greedy[converters.RoleConverter]):
@@ -154,7 +156,7 @@ class Settings(commands.Cog):
             raise commands.MissingRequiredArgument(ctx.command.clean_params["roles"])
         await add_to_list_setting(ctx, "autoroles", roles)
 
-    @autoroles.command()
+    @autoroles.command(name="remove")
     @commands.guild_only()
     @checks.trustee_only()
     async def autoroles_remove(self, ctx, *roles: commands.Greedy[converters.RoleConverter]):
