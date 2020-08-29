@@ -15,7 +15,7 @@ class GuildBotHelp(commands.HelpCommand):
         for cog in mapping.keys():
             if mapping[cog]:
                 embed.add_field(
-                    name=cog.qualified_name if cog.qualified_name else "Uncategorized",
+                    name=cog.qualified_name if cog else "Uncategorized",
                     value=f"`{'`, `'.join([command.name for command in mapping[cog]])}`")
 
         await self.get_destination().send(embed=embed)
