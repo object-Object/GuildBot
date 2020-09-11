@@ -4,7 +4,7 @@ import traceback
 
 from discord.ext import commands
 
-from utils import database, settings
+from utils import database
 
 
 class Bot(commands.Bot):
@@ -12,7 +12,6 @@ class Bot(commands.Bot):
         super().__init__(*args, **kwargs)
 
         self.database = database.Database()
-        self.settings = settings.Settings()
 
         for extension in [f for f in os.listdir("extensions") if f.endswith(".py")]:
             try:

@@ -17,6 +17,14 @@ async def create_pool():
                 category_id BIGINT NOT NULL
             );
         """)
+        await conn.execute("""CREATE TABLE IF NOT EXISTS settings (
+                guild_id BIGINT PRIMARY KEY,
+                welcome_channel BIGINT,
+                autorole BIGINT,
+                thread_category BIGINT NOT NULL,
+                archive_category BIGINT NOT NULL
+            );
+        """)
     return pool
 
 
@@ -42,3 +50,17 @@ class Database():
                 "INSERT INTO threads (channel_id, author_id, category_id) VALUES($1, $2, $3)",
                 channel_id, author_id, category_id,
                 )
+
+    async def get_settings(self, guild_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow("SELECT * FROM settings WHERE guild_id=$1;", guild_id)
+
+    async def set_setting(self, guild_id, setting, value):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchval(f"UPDATE settings SET {setting}=$1; WHERE guild_id=$2;", value, guild_id)
+    
+    async def insert_settings(self, guild_id, welcome_channel, autorole, thread_category, archive_category):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow(
+                "INSERT INTO settings (guild_id, welcome_channel, autorole, thread_category, archive_category) VALUES($1, $2, $3, $4, $5)",
+                guild_id, welcome_channel, autorole, thread_category, archive_category)
