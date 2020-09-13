@@ -20,9 +20,22 @@ async def create_pool():
         await conn.execute("""CREATE TABLE IF NOT EXISTS settings (
                 guild_id BIGINT PRIMARY KEY,
                 welcome_channel BIGINT,
-                autorole BIGINT,
-                thread_category BIGINT NOT NULL,
-                archive_category BIGINT NOT NULL
+                trustee_role BIGINT NOT NULL
+            );
+        """)
+        await conn.execute("""CREATE TABLE IF NOT EXISTS thread_categories (
+                category_id BIGINT PRIMARY KEY,
+                guild_id BIGINT
+            );
+        """)
+        await conn.execute("""CREATE TABLE IF NOT EXISTS archive_categories (
+                category_id BIGINT PRIMARY KEY,
+                guild_id BIGINT
+            );
+        """)
+        await conn.execute("""CREATE TABLE IF NOT EXISTS autoroles (
+                role_id BIGINT PRIMARY KEY,
+                guild_id BIGINT
             );
         """)
     return pool
@@ -57,10 +70,52 @@ class Database():
 
     async def set_setting(self, guild_id, setting, value):
         async with self.pool.acquire() as conn:
-            return await conn.fetchval(f"UPDATE settings SET {setting}=$1; WHERE guild_id=$2;", value, guild_id)
-    
+            return await conn.fetchval("UPDATE settings SET $1=$2; WHERE guild_id=$2;", setting, value, guild_id)
+
     async def insert_settings(self, guild_id, welcome_channel, autorole, thread_category, archive_category):
         async with self.pool.acquire() as conn:
             return await conn.fetchrow(
-                "INSERT INTO settings (guild_id, welcome_channel, autorole, thread_category, archive_category) VALUES($1, $2, $3, $4, $5)",
+                "INSERT INTO settings (guild_id, welcome_channel, autorole, thread_category, archive_category) VALUES($1, $2, $3, $4, $5);",
                 guild_id, welcome_channel, autorole, thread_category, archive_category)
+
+    async def get_thread_categories(self, guild_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetch("SELECT * FROM thread_categories WHERE guild_id=$1;", guild_id)
+
+    async def insert_thread_category(self, guild_id, category_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow(
+                "INSERT INTO thread_categories (category_id, guild_id) VALUES($1, $2);", category_id, guild_id,
+                )
+
+    async def remove_thread_category(self, category_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow("DELETE FROM thread_categories WHERE category_id=$1;", category_id)
+
+    async def get_archive_category(self, guild_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetch("SELECT * FROM archive_categories WHERE guild_id=$1;", guild_id)
+
+    async def insert_archive_category(self, guild_id, category_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow(
+                "INSERT INTO archive_categories (category_id, guild_id) VALUES($1, $2);", category_id, guild_id,
+                )
+
+    async def remove_archive_category(self, category_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow("DELETE FROM archive_categories WHERE category_id=$1;", category_id)
+
+    async def get_autoroles(self, guild_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetch("SELECT * FROM autoroles WHERE guild_id=$1;", guild_id)
+
+    async def insert_autorole(self, guild_id, role_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow(
+                "INSERT INTO autoroles (role_id, guild_id) VALUES($1, $2);", role_id, guild_id,
+                )
+
+    async def remove_autorole(self, role_id):
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow("DELETE FROM autoroles WHERE category_id=$1;", role_id)
