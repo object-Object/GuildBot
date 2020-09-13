@@ -119,3 +119,11 @@ class Database():
     async def remove_autorole(self, role_id):
         async with self.pool.acquire() as conn:
             return await conn.fetchrow("DELETE FROM autoroles WHERE category_id=$1;", role_id)
+
+    async def execute(self, query, *args, **kwargs):
+        async with self.pool.acquire() as conn:
+            return await conn.execute(query, *args, **kwargs)
+
+    async def fetch(self, query, *args, **kwargs):
+        async with self.pool.acquire() as conn:
+            return await conn.fetch(query, *args, **kwargs)

@@ -8,18 +8,18 @@ from utils import checks, converters, errors
 
 
 async def user_can_edit_thread(bot, user, channel):
-    role = channel.guild.get_role(bot.settings.trustee_role)
+    role = channel.guild.get_role(await bot.database.get_settings(channel.guild.id)["trustee_role"])
     thread_author_id = await bot.database.get_author_of_thread(channel.id)
     if thread_author_id is not None and user.id != thread_author_id and role not in user.roles:
         raise errors.NotThreadAuthor()
     return True
 
 
-def raise_bad_category(ctx):
+async def raise_bad_category(ctx):
     category_names = []
-    for category_id in ctx.bot.settings.thread_categories:
+    for category in await ctx.bot.database.get_thread_categories(ctx.guild.id):
         try:
-            category_names.append(ctx.guild.get_channel(category_id).name)
+            category_names.append(ctx.guild.get_channel(category["category_id"]).name)
         except AttributeError:
             pass
     raise commands.BadArgument(f"category must be one of the following: `{'`, `'.join(category_names)}`.")
@@ -49,8 +49,8 @@ class Channels(commands.Cog):
         )
     @commands.guild_only()
     async def thread(self, ctx, category: converters.CategoryConverter, title, *, content):
-        if category.id not in ctx.bot.settings.thread_categories:
-            raise_bad_category(ctx)
+        if category.id not in [category_id["category_id"] for category_id in await ctx.bot.database.get_thread_categories(ctx.guild.id)]:
+            await raise_bad_category(ctx)
         if not ctx.author.permissions_in(category).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         if len(title) > 256:
@@ -97,10 +97,10 @@ class Channels(commands.Cog):
     @channel_is_thread()
     @author_can_archive()
     async def archive(self, ctx, *, reason):
-        category = ctx.guild.get_channel(ctx.bot.settings.archive_category)
+        category = ctx.guild.get_channel(ctx.bot.database.get_archive_categories(ctx,guild.id)[0])  # will be changed later on
         if category is None:
             raise errors.GuildMissingCategory("Archive category not found.")
-        if ctx.channel.category.id == self.bot.settings.archive_category:
+        if ctx.channel.category.id == category:
             return
 
         await ctx.send(embed=discord.Embed(
@@ -129,7 +129,7 @@ class Channels(commands.Cog):
         if not ctx.author.permissions_in(channel).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         await user_can_edit_thread(ctx.bot, ctx.author, channel)  # will raise an exception if they can't edit the thread
-        if channel.category.id != self.bot.settings.archive_category:
+        if channel.category.id != self.bot.database.get_archive_categories(ctx.guild.id)[0]:
             raise commands.BadArgument(f"{channel.mention} is not archived.")
 
         category = ctx.guild.get_channel(await self.bot.database.get_category_of_thread(channel.id))
@@ -163,10 +163,10 @@ class Channels(commands.Cog):
         if await ctx.bot.database.get_thread(channel.id):
             raise commands.BadArgument(f"{channel.mention} is already a thread.")
         if category is None:
-            if channel.category.id == ctx.bot.settings.archive_category:
+            if channel.category.id == await ctx.bot.database.get_archive_categories(ctx.guild.id)[0]:
                 raise commands.BadArgument(f"{channel.mention} is archived, so a valid category must be specified as an argument.")  # noqa: E501
             category = channel.category
-        if category.id not in ctx.bot.settings.thread_categories:
+        if category.id not in [category_id["category_id"] for category_id in await ctx.bot.database.get_thread_categories(ctx.guild.id)]:
             raise_bad_category(ctx)
 
         await ctx.send(embed=discord.Embed(
@@ -174,7 +174,7 @@ class Channels(commands.Cog):
             description=f"{channel.mention} has been converted to a thread by {ctx.author.mention}, who has also been set as the thread's author.",  # noqa: E501
             color=discord.Color(0x007fff)))
 
-        if channel.category.id not in (category.id, ctx.bot.settings.archive_category):
+        if channel.category.id not in (category.id, [category_id["category_id"] for category_id in await ctx.bot.database.get_archive_categories(ctx.guild.id)]):
             await channel.edit(category=category)
 
         await ctx.bot.database.create_thread(channel.id, ctx.author.id, category.id)
