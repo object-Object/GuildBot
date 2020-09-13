@@ -6,7 +6,7 @@ from utils import errors
 def trustee_only():
     async def predicate(ctx):
         if ctx.guild is not None:
-            role = ctx.guild.get_role(ctx.bot.settings.trustee_role)
+            role = ctx.guild.get_role((await ctx.bot.database.get_settings(ctx.guild.id))["trustee_role"])
             if role not in ctx.author.roles and ctx.author.id != ctx.guild.owner.id:
                 raise errors.NotTrustee()
         return True
