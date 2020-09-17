@@ -8,7 +8,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        welcome_channel = self.bot.get_channel(await self.bot.database.get_settings(member.guild.id)["welcome_channel"])
+        welcome_channel = self.bot.get_channel((await self.bot.database.get_settings(member.guild.id))["welcome_channel"])
         if welcome_channel is not None:
             embed = discord.Embed(
                 title="User joined",
@@ -19,7 +19,7 @@ class Events(commands.Cog):
             embed.set_thumbnail(url=member.avatar_url)
             await welcome_channel.send(embed=embed)
         autoroles = []
-        for role_id in [role_id["role_id"] for role_id in self.bot.database.get_autoroles(member.guild.id)]:
+        for role_id in [role_id["role_id"] for role_id in await self.bot.database.get_autoroles(member.guild.id)]:
             role = member.guild.get_role(role_id)
             if role:
                 autoroles.append(role)
@@ -28,7 +28,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        welcome_channel = self.bot.get_channel(self.bot.database.get_settings(member.guild.id)["welcome_channel"])
+        welcome_channel = self.bot.get_channel((await self.bot.database.get_settings(member.guild.id))["welcome_channel"])
         if welcome_channel is not None:
             await welcome_channel.send(embed=discord.Embed(
                 title="User left",
