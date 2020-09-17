@@ -37,9 +37,9 @@ async def set_single_setting(ctx, setting_key, old_obj, new_obj):
 
 async def show_list_setting(ctx, setting_key, get_func):
     obj_displays = []
-    for obj_id in await ctx.bot.database.execute(f"SELECT * FROM {setting_key} WHERE guild_id=$1;", ctx.guild.id):
+    for obj in await ctx.bot.database.fetch(f"SELECT * FROM {setting_key} WHERE guild_id=$1;", ctx.guild.id):
         try:
-            obj_displays.append(display(get_func(obj_id)))
+            obj_displays.append(display(get_func(obj["category_id"])))
         except AttributeError:
             pass
     await ctx.send(embed=discord.Embed(
@@ -54,7 +54,7 @@ async def add_to_list_setting(ctx, setting_key, objs):
     invalid_obj_displays = []
     settings = await ctx.bot.database.fetch(f"SELECT * FROM {setting_key} WHERE guild_id=$1;", ctx.guild.id)
     for obj in objs:
-        if obj.id in [category_id["category_id"] for category_id in settings]:
+        if obj.id in (category_id["category_id"] for category_id in settings):
             invalid_obj_displays.append(display(obj))
         else:
             obj_displays.append(display(obj))
@@ -111,27 +111,12 @@ class Settings(commands.Cog):
             raise errors.CommandFailed("`trustee_role` cannot be changed once set.")
         await set_single_setting(ctx, "trustee_role", old_role, new_role)
 
-    @commands.group(aliases=["archivecats"], invoke_without_command=True)
+    @commands.command(aliases=["archivecat"], invoke_without_command=True)
     @commands.guild_only()
     @checks.trustee_only()
-    async def archivecategories(self, ctx):
-        await show_list_setting(ctx, "archive_categories", ctx.guild.get_channel)
-
-    @archivecategories.command(name="add")
-    @commands.guild_only()
-    @checks.trustee_only()
-    async def archivecats_add(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
-        if not categories:  # this is needed because varargs by default are fine with having 0 arguments
-            raise commands.MissingRequiredArgument(ctx.command.clean_params["categories"])
-        await add_to_list_setting(ctx, "archive_categories", categories)
-
-    @archivecategories.command(name="remove")
-    @commands.guild_only()
-    @checks.trustee_only()
-    async def archivecats_remove(self, ctx, *categories: commands.Greedy[converters.CategoryConverter]):
-        if not categories:
-            raise commands.MissingRequiredArgument(ctx.command.clean_params["categories"])
-        await remove_from_list_setting(ctx, "archive_categories", categories)
+    async def archivecategory(self, ctx, new_category: typing.Optional[converters.CategoryConverter]):
+        old_category = ctx.guild.get_channel((await ctx.bot.database.get_settings(ctx.guild.id))["archive_category"])
+        await set_single_setting(ctx, "archive_category", old_category, new_category)
 
     @commands.group(aliases=["threadcats"], invoke_without_command=True)
     @commands.guild_only()
@@ -181,7 +166,7 @@ class Settings(commands.Cog):
     @commands.guild_only()
     @checks.trustee_only()
     async def welcomechannel(self, ctx, new_channel: typing.Optional[converters.TextChannelConverter]):
-        old_channel = ctx.guild.get_channel(await ctx.bot.database.get_settings(ctx.guild.id)["welcome_channel"])
+        old_channel = ctx.guild.get_channel((await ctx.bot.database.get_settings(ctx.guild.id))["welcome_channel"])
         await set_single_setting(ctx, "welcome_channel", old_channel, new_channel)
 
 
