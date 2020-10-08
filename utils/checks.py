@@ -20,3 +20,12 @@ def is_guild_owner():
                 raise commands.CheckFailure("You must be the guild owner to run this command.")
         return True
     return commands.check(predicate)
+
+
+def channel_in_category():
+    async def predicate(ctx):
+        if ctx.guild is not None:
+            if ctx.channel.category is None:
+                raise commands.CheckFailure("This command can only be run in a channel that is in a category.")
+        return True
+    return commands.check(predicate)

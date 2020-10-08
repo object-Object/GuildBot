@@ -193,6 +193,18 @@ class Channels(commands.Cog):
                 description=str(error),
                 color=discord.Color(0xff0000)))
 
+    @commands.command(aliases=["syncperms"])
+    @commands.guild_only()
+    @checks.channel_in_category()
+    async def syncpermissions(self, ctx):
+        if ctx.channel.permissions_synced:
+            raise commands.CheckFailure("This channel's permissions are already synced with its category.")
+        await ctx.channel.edit(sync_permissions=True)
+        await ctx.send(embed=discord.Embed(
+            title="Channel permissions synced",
+            description="This channel's permissions are now synced with its category.",
+            color=discord.Color(0x007fff)))
+
 
 # Load extension
 def setup(bot):
