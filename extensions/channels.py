@@ -54,7 +54,7 @@ class Channels(commands.Cog):
         if not ctx.author.permissions_in(category).view_channel:
             raise commands.MissingPermissions(["view_channel"])
         if len(title) > 256:
-            raise(commands.BadArgument("title must not be longer than 256 characters."))
+            raise(commands.BadArgument("Title must not be longer than 256 characters."))
 
         channel_name = re.sub(r"\s+", "-", title.lower())  # replace spaces with a single dash
         channel_name = re.sub(r"[^a-zA-Z0-9_\-]", "", channel_name)  # remove any illegal characters as defined by Discord
