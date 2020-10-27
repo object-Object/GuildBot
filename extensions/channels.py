@@ -205,6 +205,18 @@ class Channels(commands.Cog):
             description="This channel's permissions are now synced with its category.",
             color=discord.Color(0x007fff)))
 
+    @commands.command(brief="Posts the current channel's topic.")
+    async def topic(self, ctx):
+        embed = discord.Embed(
+            title="Channel topic",
+            description=ctx.channel.topic or "Topic not set!",
+            color=discord.Color(0x007fff) if ctx.channel.topic else discord.Color(0xff0000))
+        if ctx.channel.topic:
+            embed.set_footer(
+                text="Remember to stay on topic!"
+                )
+        await ctx.send(embed=embed)
+
 
 # Load extension
 def setup(bot):
