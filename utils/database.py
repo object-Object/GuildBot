@@ -62,17 +62,17 @@ class Database():
 
     async def get_settings(self, guild_id):
         async with self.pool.acquire() as conn:
-            return await conn.fetchrow("SELECT * FROM settings WHERE guild_id=$1;", guild_id)
+            return (await conn.fetchrow("SELECT * FROM settings WHERE guild_id=$1;", guild_id)
+                    or await self.insert_settings(guild_id, 0))
 
     async def set_setting(self, guild_id, setting, value):
         async with self.pool.acquire() as conn:
             return await conn.fetchval(f"UPDATE settings SET {setting}=$1 WHERE guild_id=$2;", value, guild_id)
 
-    async def insert_settings(self, guild_id, welcome_channel, trustee_role, archive_category):
+    async def insert_settings(self, guild_id, trustee_role):
         async with self.pool.acquire() as conn:
             return await conn.fetchrow(
-                "INSERT INTO settings (guild_id, welcome_channel, trustee_role, archive_category) VALUES($1, $2, $3, $4, $5);",
-                guild_id, welcome_channel, trustee_role, archive_category)
+                "INSERT INTO settings (guild_id, trustee_role) VALUES($1, $2) RETURNING *;", guild_id, trustee_role)
 
     async def get_thread_categories(self, guild_id):
         async with self.pool.acquire() as conn:
