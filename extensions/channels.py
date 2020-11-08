@@ -162,22 +162,40 @@ class Channels(commands.Cog):
                          category: Optional[converters.CategoryConverter]):
         if await ctx.bot.database.get_thread(channel.id):
             raise commands.BadArgument(f"{channel.mention} is already a thread.")
+
+        channel_is_archived = channel.category.id == (await ctx.bot.database.get_settings(ctx.guild.id))["archive_category"]
+        thread_categories = await ctx.bot.database.get_thread_categories(ctx.guild.id)
+
         if category is None:
-            if channel.category.id == await ctx.bot.database.get_settings(ctx.guild.id)["archive_category"]:
-                raise commands.BadArgument(f"{channel.mention} is archived, so a valid category must be specified as an argument.")  # noqa: E501
+            if channel_is_archived:
+                raise commands.BadArgument(f"{channel.mention} is archived, so a valid category must be specified as an argument.")
             category = channel.category
-        if category.id not in [category_id["category_id"] for category_id in await ctx.bot.database.get_thread_categories(ctx.guild.id)]:
-            raise_bad_category(ctx)
+        if category.id not in [category_id["category_id"] for category_id in thread_categories]:
+            await raise_bad_category(ctx)
+
+        if channel_is_archived:
+            overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(
+                send_messages=False,
+                manage_messages=False,
+                add_reactions=False,
+                manage_channels=False)}
+            await channel.edit(overwrites=overwrites)
+        else:
+            overwrites = {ctx.guild.default_role: discord.PermissionOverwrite(
+                send_messages=None,
+                manage_messages=None,
+                add_reactions=None,
+                manage_channels=None)}
+            await channel.edit(
+                category=category,  # if the channel isn't already in the chosen category, move it there
+                overwrites=overwrites)
+
+        await ctx.bot.database.create_thread(channel.id, ctx.author.id, category.id)
 
         await ctx.send(embed=discord.Embed(
             title="Thread imported",
-            description=f"{channel.mention} has been converted to a thread by {ctx.author.mention}, who has also been set as the thread's author.",  # noqa: E501
+            description=f"{channel.mention} has been converted to a thread by {ctx.author.mention}, who has also been set as the thread's author.",
             color=discord.Color(0x007fff)))
-
-        if channel.category.id not in (category.id, await ctx.bot.database.get_settings(ctx.guild.id)):
-            await channel.edit(category=category)
-
-        await ctx.bot.database.create_thread(channel.id, ctx.author.id, category.id)
 
     @archive.error
     @necro.error
