@@ -110,13 +110,13 @@ class Channels(commands.Cog):
                 text=f"Thread archived by {ctx.author.display_name}",
                 icon_url=ctx.author.avatar_url))
 
-        overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
-        overwrite.update(
+        overwrites = ctx.channel.overwrites
+        overwrites[ctx.guild.default_role].update(
             send_messages=False,
             manage_messages=False,
             add_reactions=False,
             manage_channels=False)
-        await ctx.channel.edit(category=category, overwrites={ctx.guild.default_role: overwrite})
+        await ctx.channel.edit(category=category, overwrites=overwrites)
 
     @commands.command(
         brief="Necroes (un-archives) the specified channel.",
@@ -133,13 +133,13 @@ class Channels(commands.Cog):
 
         category = ctx.guild.get_channel(await self.bot.database.get_category_of_thread(channel.id))
 
-        overwrite = channel.overwrites_for(ctx.guild.default_role)
-        overwrite.update(
+        overwrites = channel.overwrites
+        overwrites[ctx.guild.default_role].update(
             send_messages=None,
             manage_messages=None,
             add_reactions=None,
             manage_channels=None)
-        await channel.edit(category=category, overwrites={ctx.guild.default_role: overwrite})
+        await channel.edit(category=category, overwrites=overwrites)
 
         await channel.send(embed=discord.Embed(
             title="Thread necroed",
@@ -172,21 +172,21 @@ class Channels(commands.Cog):
             await raise_bad_category(ctx)
 
         if channel_is_archived:
-            overwrite = channel.overwrites_for(ctx.guild.default_role)
-            overwrite.update(
+            overwrites = channel.overwrites
+            overwrites[ctx.guild.default_role].update(
                 send_messages=False,
                 manage_messages=False,
                 add_reactions=False,
                 manage_channels=False)
-            await channel.edit(overwrites={ctx.guild.default_role: overwrite})
+            await channel.edit(overwrites=overwrites)
         else:
-            overwrite = channel.overwrites_for(ctx.guild.default_role)
-            overwrite.update(
+            overwrites = channel.overwrites
+            overwrites[ctx.guild.default_role].update(
                 send_messages=None,
                 manage_messages=None,
                 add_reactions=None,
                 manage_channels=None)
-            await channel.edit(category=category, overwrites={ctx.guild.default_role: overwrite})  # if the channel isn't already in the chosen category, move it there
+            await channel.edit(category=category, overwrites=overwrites)  # if the channel isn't already in the chosen category, move it there
 
         await ctx.bot.database.create_thread(channel.id, ctx.author.id, category.id)
 
