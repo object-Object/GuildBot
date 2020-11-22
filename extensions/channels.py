@@ -111,7 +111,7 @@ class Channels(commands.Cog):
                 icon_url=ctx.author.avatar_url))
 
         overwrites = ctx.channel.overwrites
-        overwrites[ctx.guild.default_role].update(
+        overwrites.setdefault(ctx.guild.default_role, discord.PermissionOverwrite()).update(
             send_messages=False,
             manage_messages=False,
             add_reactions=False,
@@ -134,7 +134,7 @@ class Channels(commands.Cog):
         category = ctx.guild.get_channel(await self.bot.database.get_category_of_thread(channel.id))
 
         overwrites = channel.overwrites
-        overwrites[ctx.guild.default_role].update(
+        overwrites.setdefault(ctx.guild.default_role, discord.PermissionOverwrite()).update(
             send_messages=None,
             manage_messages=None,
             add_reactions=None,
@@ -173,7 +173,7 @@ class Channels(commands.Cog):
 
         if channel_is_archived:
             overwrites = channel.overwrites
-            overwrites[ctx.guild.default_role].update(
+            overwrites.setdefault(ctx.guild.default_role, discord.PermissionOverwrite()).update(
                 send_messages=False,
                 manage_messages=False,
                 add_reactions=False,
@@ -181,7 +181,7 @@ class Channels(commands.Cog):
             await channel.edit(overwrites=overwrites)
         else:
             overwrites = channel.overwrites
-            overwrites[ctx.guild.default_role].update(
+            overwrites.setdefault(ctx.guild.default_role, discord.PermissionOverwrite()).update(
                 send_messages=None,
                 manage_messages=None,
                 add_reactions=None,
