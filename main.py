@@ -1,4 +1,6 @@
 import discord
+
+import config
 from bot import Bot
 from utils.help import GuildBotHelp
 

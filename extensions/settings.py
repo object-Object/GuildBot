@@ -2,7 +2,6 @@ import typing
 
 import discord
 from discord.ext import commands
-
 from utils import checks, converters, errors
 
 display_lookup = {

@@ -1,7 +1,6 @@
 import asyncio
 
 import asyncpg
-
 import config
 
 
