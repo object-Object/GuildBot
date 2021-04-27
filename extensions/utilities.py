@@ -1,5 +1,7 @@
+import asyncio
 import discord
 from discord.ext import commands
+import io
 from utils import checks
 
 
@@ -49,6 +51,100 @@ class Utilities(commands.Cog):
                 title="Messages cleared",
                 description=f"**{num_deleted}** messages have been deleted from this channel.",
                 color=discord.Color(0x007fff)))
+
+    @commands.guild_only()
+    @checks.trustee_only()
+    @commands.command(brief="Bans all members who joined between the selected members, inclusive.")
+    async def massban(self, ctx, member_a: commands.MemberConverter, member_b: commands.MemberConverter, reason):
+        if member_a.joined_at is None:
+            raise commands.BadArgument("Unable to get join datetime for member_a. Try a different member.")
+        if member_b.joined_at is None:
+            raise commands.BadArgument("Unable to get join datetime for member_b. Try a different member.")
+        if len(reason) > 512:
+            raise commands.BadArgument("reason must be a maximum of 512 characters.")
+
+        if member_a.joined_at < member_b.joined_at:
+            start_time = member_a.joined_at
+            end_time = member_b.joined_at
+        else:
+            start_time = member_b.joined_at
+            end_time = member_a.joined_at
+
+        members = []
+        for member in ctx.guild.members:
+            if member.joined_at is not None and start_time <= member.joined_at <= end_time:
+                members.append(member)
+        member_string = "\n".join(f"{member.name}#{member.discriminator} ({member.id})" for member in members)
+
+        message = await ctx.send(
+            content=f"<@&{(await ctx.bot.database.get_settings(ctx.guild.id))['trustee_role']}>",
+            file=discord.File(io.StringIO(member_string), "banlist.txt"),
+            embed=discord.Embed(
+                title="Mass ban confirmation",
+                description="Another trustee must confirm these values to start the mass ban.",
+                color=discord.Color(0x007fff))
+            .set_author(
+                name=ctx.author.display_name,
+                icon_url=ctx.author.avatar_url)
+            .set_footer(
+                text="This message will time out in 15 minutes.")
+            .add_field(
+                name="Start time",
+                value=str(start_time))
+            .add_field(
+                name="End time",
+                value=str(end_time))
+            .add_field(
+                name="Ban count",
+                value=str(len(members)))
+            .add_field(
+                name="Reason",
+                value=reason))
+        await message.add_reaction("✅")
+        await message.add_reaction("❌")
+
+        trustee_role = ctx.guild.get_role((await ctx.bot.database.get_settings(ctx.guild.id))["trustee_role"])
+
+        def check(reaction, user):
+            return (reaction.message == message and (trustee_role in user.roles or user == ctx.guild.owner)
+                    and not user.bot and (reaction.emoji == "✅" and user != ctx.author or reaction.emoji == "❌"))
+
+        try:
+            reaction, user = await ctx.bot.wait_for("reaction_add", timeout=15 * 60, check=check)
+        except asyncio.TimeoutError:
+            await message.clear_reactions()
+            await message.edit(
+                content=message.content,
+                embed=message.embeds[0].set_footer())
+            await ctx.send(embed=discord.Embed(
+                title="Timed out!",
+                description="The mass ban confirmation has timed out after 15 minutes of inactivity.",
+                color=discord.Color(0xff0000)))
+        else:
+            await message.clear_reactions()
+            if reaction.emoji == "✅":
+                await message.edit(
+                    content=message.content,
+                    embed=message.embeds[0].set_footer(text="Banning in progress..."))
+
+                for member in members:
+                    await member.ban(reason=reason)
+
+                await message.edit(
+                    content=message.content,
+                    embed=message.embeds[0].set_footer())
+                await ctx.send(embed=discord.Embed(
+                    title="Mass ban completed",
+                    description=f"{len(members)} users have been banned. The confirmation was approved by {user.mention}.",
+                    color=discord.Color(0x007fff)))
+            else:
+                await message.edit(
+                    content=message.content,
+                    embed=message.embeds[0].set_footer())
+                await ctx.send(embed=discord.Embed(
+                    title="Cancelled!",
+                    description=f"The mass ban has been cancelled by {user.mention}.",
+                    color=discord.Color(0xff0000)))
 
 
 def setup(bot):
