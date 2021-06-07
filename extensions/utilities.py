@@ -146,6 +146,30 @@ class Utilities(commands.Cog):
                     description=f"The mass ban has been cancelled by {user.mention}.",
                     color=discord.Color(0xff0000)))
 
+    @commands.guild_only()
+    @checks.trustee_only()
+    @commands.command(brief="Ban (multiple) user by its id, they do not need to be part of the guild.")
+    async def hackban(self, ctx, *, users):
+        individual_ids = users.split()
+        for id_ in individual_ids:
+            try:
+                user_id = int(id_)
+            except ValueError:
+                return await ctx.send("Argument `users` must be space separated ids.")
+
+            await ctx.guild.chunk()
+            member = ctx.guild.get_member(user_id)
+            if member and member.top_role >= ctx.author.top_role:
+                return await ctx.send("You cannot ban someone who is higher or equal to you in role hierarchy.")
+
+            await ctx.guild.ban(discord.Object(id=user_id))
+
+        await ctx.send(embed=discord.Embed(
+            title="Hack ban complete",
+            description=f"Banned {len(individual_ids)} users from the guild.",
+            color=discord.Color(0x007fff)
+        ))
+
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
