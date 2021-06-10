@@ -155,12 +155,18 @@ class Utilities(commands.Cog):
             try:
                 user_id = int(id_)
             except ValueError:
-                return await ctx.send("Argument `users` must be space separated ids.")
+                return await ctx.send(embed=discord.Embed(
+                    title="Hackban failed!",
+                    description=f"Argument `users` must be space separated ids.",
+                    color=discord.Color(0xff0000)))
 
             await ctx.guild.chunk()
             member = ctx.guild.get_member(user_id)
             if member and member.top_role >= ctx.author.top_role:
-                return await ctx.send("You cannot ban someone who is higher or equal to you in role hierarchy.")
+                return await ctx.send(embed=discord.Embed(
+                    title="Hackban failed!",
+                    description="You cannot ban someone who is higher or equal to you in role hierarchy.",
+                    color=discord.Color(0xff0000)))
 
             await ctx.guild.ban(discord.Object(id=user_id))
 
